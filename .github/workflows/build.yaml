@@ -1,0 +1,106 @@
+name: Packer build
+
+on:
+  pull_request_target:
+    types:
+      - closed
+    branches:
+      - main
+
+permissions:
+  contents: read
+  id-token: write
+  actions: read
+
+jobs:
+  packer-build:
+    name: Packer Build
+    if: github.event.pull_request.merged == true
+    strategy:
+      matrix:
+        environment:
+          - test
+      # When set to true, GitHub cancels all in-progress jobs if any matrix job fails.
+      fail-fast: true
+      # The maximum number of jobs that can run simultaneously
+      max-parallel: 1
+    environment:
+      name: ${{ matrix.environment }}
+    defaults:
+      run:
+        working-directory: ./dynatrace
+    env:
+      filename: ${{ matrix.environment }}-${{ matrix.arguments.type }}
+      env_name: ${{ matrix.environment }}
+      ACCOUNT_ID: ${{ vars.ACCOUNT_ID }}
+      DYNATRACE_ENV_URL: ${{ vars.DYNATRACE_ENV_URL }}
+      DYNATRACE_API_TOKEN: ${{ secrets.DYNATRACE_API_TOKEN }}
+      DYNATRACE_ENVIRONMENT_ID: ${{ vars.DYNATRACE_ENVIRONMENT_ID }}
+    
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+      
+      - name: Read and Increment AMI Version
+        id: versioning
+        run: |
+          if [ -f version.txt ]; then
+            OLD_VERSION=$(cat version.txt)
+          else
+            OLD_VERSION="v1.0.0"
+          fi
+          echo "Old version: $OLD_VERSION"
+
+          # Extract major, minor, and patch numbers
+          VERSION_NUM=$(echo $OLD_VERSION | sed 's/v//')
+          MAJOR=$(echo $VERSION_NUM | cut -d. -f1)
+          MINOR=$(echo $VERSION_NUM | cut -d. -f2)
+          PATCH=$(echo $VERSION_NUM | cut -d. -f3)
+
+          # Increment patch version
+          NEW_VERSION="v$MAJOR.$MINOR.$(($PATCH + 1))"
+          echo "New version: $NEW_VERSION"
+
+          # Save new version
+          echo $NEW_VERSION > version.txt
+          echo "ami_version=$NEW_VERSION" >> $GITHUB_ENV
+
+      - name: Commit and Push Updated Version
+        run: |
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "actions@github.com"
+          git add version.txt
+          git commit -m "Bump AMI version to $ami_version" || echo "No changes to commit"
+          git push || echo "No changes to push"
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        name: Configure AWS IdP Credentials
+        with:
+          role-to-assume: arn:aws:iam::${{ vars.ACCOUNT_ID }}:role/Dynatrace-Activgate-AMI-Role
+          role-session-name: GitHubActions
+          retry-max-attempts: 5
+          aws-region: eu-west-2
+
+      - name: Get latest workflow run for PR
+        uses: octokit/request-action@v2.x
+        id: get_latest_run
+        with:
+          route: GET /repos/${{ github.repository }}/actions/workflows/build.yaml/runs?head_sha=${{ github.event.pull_request.head.sha }}&status=success
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Install Packer
+        uses: hashicorp/setup-packer@v2
+        with:
+          version: latest
+
+      - name: Validate Packer Template
+        run: packer validate packer.pkr.hcl
+
+      - name: Build AWS AMI with Auto-Incremented Tag
+        run: packer build -var "ami_version=${{ env.ami_version }}" packer.pkr.hcl
+
+    
