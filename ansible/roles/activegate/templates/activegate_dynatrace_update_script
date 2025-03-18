@@ -1,0 +1,52 @@
+#!/bin/bash
+
+set -eu
+
+readonly RETRY_INTERVAL_IN_SEC=60
+
+json_secret=
+env_id=
+tenant_token=
+auth_token=
+
+fail_msg_prefix=
+retry_interval_in_sec=0
+
+if [[ ! -r {{dt_auth_properties_path}} || "${FORCE_SECRETS:-__UNDEFINED__}" != "__UNDEFINED__" ]] ; then
+  # Read the keys and values - keep trying until we succeed
+  until [[ -n $json_secret ]] && \
+        [[ -n $env_id ]] && \
+        [[ -n $tenant_token ]] && \
+        [[ -n $auth_token ]]; do
+    echo "${fail_msg_prefix}Trying to read the secret."
+    sleep $retry_interval_in_sec
+    if json_secret=$(aws secretsmanager get-secret-value --secret-id {{aws_secret_name}} --region {{ansible_aws_ssm_region}} --query 'SecretString' --output text); then
+      # Extract the values
+      env_id=$(echo $json_secret | jq '.dt_env_id' | xargs)
+      tenant_token=$(echo $json_secret | jq '.dt_tenant_token' | xargs)
+      auth_token=$(echo $json_secret | jq '.dt_auth_token' | xargs)
+    else
+      echo "Failed to read the secret. Retrying in $RETRY_INTERVAL_IN_SEC seconds." >&2
+    fi
+    retry_interval_in_sec=$RETRY_INTERVAL_IN_SEC
+    fail_msg_prefix="Failed to extract the values for one/many/all of 'dt_env_id', 'dt_tenant_token', 'dt_auth_token'. "
+  done
+  
+  echo "Successfully retrieved the secrets for environment '${env_id}'."
+  
+  # Create the custom properties
+  cat << __CUSTOM_PROP__ > {{dt_auth_properties_path}} 
+[${env_id}]
+tenantToken = $tenant_token
+authToken = $auth_token
+mainTenant = true
+__CUSTOM_PROP__
+  
+  # Change the ownership of the auth properties
+  chown dtuserag:dtuserag {{dt_auth_properties_path}}
+else
+  echo "Dynatrace secrets are pulled and configured already. Using the existing configuration."
+fi
+
+# Start the activegate service
+systemctl start dynatracegateway.service

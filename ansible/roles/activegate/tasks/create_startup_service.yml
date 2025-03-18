@@ -1,0 +1,21 @@
+- name: Remove the defaut custom properties file (will be created when the instance is launched from the AMI)
+  ansible.builtin.file:
+    path: "{{dt_auth_properties_path}}"
+    state: absent
+
+- name: Create the activegate update script
+  ansible.builtin.template:
+    src: activegate_dynatrace_update_script
+    dest: "{{dt_activegate_env_update_script}}"
+    mode: 0755
+
+- name: Copy the service config
+  ansible.builtin.template:
+    src: "{{activegate_secret_pull_service_name}}"
+    dest: "/etc/systemd/system/{{activegate_secret_pull_service_name}}"
+
+- name: Enable the service so that it runs at the startup
+  ansible.builtin.systemd_service:
+    name: "{{activegate_secret_pull_service_name}}"
+    enabled: true
+    daemon_reload: true
