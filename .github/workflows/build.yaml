@@ -1,0 +1,63 @@
+name: Packer build
+
+on:
+  pull_request_target:
+    types:
+      - closed
+    branches:
+      - main
+
+permissions:
+  contents: read
+  id-token: write
+  actions: read
+
+jobs:
+  packer-build:
+    name: Packer Build
+    strategy:
+      matrix:
+        environment:
+          - test
+      # When set to true, GitHub cancels all in-progress jobs if any matrix job fails.
+      fail-fast: true
+      # The maximum number of jobs that can run simultaneously
+      max-parallel: 1
+    environment:
+      name: ${{ matrix.environment }}
+    defaults:
+      run:
+        working-directory: ./dynatrace
+    env:
+      filename: ${{ matrix.environment }}-${{ matrix.arguments.type }}
+      env_name: ${{ matrix.environment }}
+      ACCOUNT_ID: ${{ vars.ACCOUNT_ID }}
+      DYNATRACE_ENV_URL: ${{ vars.DYNATRACE_ENV_URL }}
+      DYNATRACE_API_TOKEN: ${{ secrets.DYNATRACE_API_TOKEN }}
+      DYNATRACE_ENVIRONMENT_ID: ${{ vars.DYNATRACE_ENVIRONMENT_ID }}
+    
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+      
+      - uses: aws-actions/configure-aws-credentials@v4
+        name: Configure AWS IdP Credentials
+        with:
+          role-to-assume: arn:aws:iam::${{ vars.ACCOUNT_ID }}:role/Dynatrace-Activgate-AMI-Role
+          role-session-name: GitHubActions
+          retry-max-attempts: 5
+          aws-region: eu-west-2
+      
+      - name: Install Packer
+        uses: hashicorp/setup-packer@v2
+        with:
+          version: latest
+
+      - name: Validate Packer Template
+        run: packer validate packer.pkr.hcl
+
+      - name: Build AWS AMI with Auto-Incremented Tag
+        run: packer build -var packer.pkr.hcl
+
+    
