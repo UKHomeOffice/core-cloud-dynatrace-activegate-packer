@@ -1,8 +1,5 @@
 name: Packer PR Validation or apply
 on:
-  push:
-    branches-ignore:
-      - main
   pull_request:
     branches:
       - main
@@ -38,18 +35,27 @@ jobs:
       - name: Authenticate for ami building
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: arn:aws:iam::${{ vars.ACCOUNT_ID }}:role/Dynatrace-Activgate-AMI-Role
+          role-to-assume: arn:aws:iam::${{ vars.AWS_ACCOUNT_ID }}:role/Dynatrace-Activgate-AMI-Role
           role-session-name: buildActiveGate
           retry-max-attempts: 5
           aws-region: eu-west-2
 
-      - name: Perform a dummy packer build
+      - name: Perform a packer build
         run: |
           skip_ami='-var skipAmiCreate=true'
           if [[ "${{ github.event.pull_request.merged }}" == "true" ]]; then
             skip_ami=''
             echo "Performing a real build."
           else
-            echo "This is a PR and therefore performing a dummy build."
+            echo "This is a PR and therefore performing a dummy build to validate the code."
           fi
           packer build ${skip_ami} packer_config
+
+      - name: Clean up the old AMIs
+        run: |
+          if [[ "${{ github.event.pull_request.merged }}" == "true" ]]; then
+            echo "Cleaning up the old AMIs"
+            ansible-playbook ansible/cleanup_old_amis.yml
+          else
+            echo "Skipping cleanup as this is not a real build."
+          fi
