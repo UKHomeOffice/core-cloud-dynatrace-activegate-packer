@@ -98,3 +98,9 @@ variable "skipImageUpgrade" {
   type = string
   default = "false"
 }
+
+variable "skipAmiCreate" {
+  description = "A flag to be enabled during the testing of the packer build."
+  type = bool
+  default = false
+}

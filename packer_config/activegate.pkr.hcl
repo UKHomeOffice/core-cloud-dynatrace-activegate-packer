@@ -34,6 +34,8 @@ source "amazon-ebs" "dt_activegate" {
     encrypted = true
     kms_key_id = var.kmsKeyId
   }
+
+  skip_create_ami = var.skipAmiCreate
 }
 
 build {
