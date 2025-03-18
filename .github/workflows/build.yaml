@@ -15,7 +15,6 @@ permissions:
 jobs:
   packer-build:
     name: Packer Build
-    if: github.event.pull_request.merged == true
     strategy:
       matrix:
         environment:
@@ -41,8 +40,6 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
-        with:
-          ref: ${{ github.sha }}
       
       - uses: aws-actions/configure-aws-credentials@v4
         name: Configure AWS IdP Credentials
@@ -51,14 +48,6 @@ jobs:
           role-session-name: GitHubActions
           retry-max-attempts: 5
           aws-region: eu-west-2
-
-      - name: Get latest workflow run for PR
-        uses: octokit/request-action@v2.x
-        id: get_latest_run
-        with:
-          route: GET /repos/${{ github.repository }}/actions/workflows/build.yaml/runs?head_sha=${{ github.event.pull_request.head.sha }}&status=success
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       
       - name: Install Packer
         uses: hashicorp/setup-packer@v2
