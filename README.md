@@ -8,8 +8,9 @@
 
 
 # AWS Secrets for the Dynatrace tokens
-| Key name                 | Value
-| ------------------------ | _____ |
+
+| Key name                 | Value |
+| ------------------------ | ----- |
 | dt_env_id | The Dynatrace environment id from where the activegatescript to be downloaded.|
 | dt_tenant_token | Tenant token can be obtained by running `curl https://nuh63189.live.dynatrace.com/api/v1/deployment/installer/agent/connectioninfo -H "Authorization: Api-Token ${DYNATRACE_TOKEN}"` from the command line. Replace the envid with the relevant one. |
 | dt_auth_token   | Activegate auth token - refer to https://docs.dynatrace.com/docs/discover-dynatrace/references/dynatrace-api/environment-api/tokens-v2/activegate-tokens/get-activegate-token |
