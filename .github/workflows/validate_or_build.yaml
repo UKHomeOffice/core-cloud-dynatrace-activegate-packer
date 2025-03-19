@@ -21,8 +21,8 @@ jobs:
       - name: Authenticate for the secrets 
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume:
-          role-session-name: GitHubActions
+          role-to-assume: arn:aws:iam::${{ vars.AWS_ACCOUNT_ID }}:role/RoleToAccess_dynatrace_tokens_FromGithub
+          role-session-name: GithubDemoSession
           retry-max-attempts: 5
           aws-region: eu-west-2
 
@@ -45,7 +45,7 @@ jobs:
           skip_ami='-var skipAmiCreate=true'
           if [[ "${{ github.event.pull_request.merged }}" == "true" ]]; then
             skip_ami=''
-            echo "Performing a real build."
+            echo "Performing the real build."
           else
             echo "This is a PR and therefore performing a dummy build to validate the code."
           fi
