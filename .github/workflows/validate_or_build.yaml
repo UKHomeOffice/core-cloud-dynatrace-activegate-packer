@@ -53,9 +53,12 @@ jobs:
 
       - name: Clean up the old AMIs
         run: |
+          checkmode="--check"
           if [[ "${{ github.event.pull_request.merged }}" == "true" ]]; then
             echo "Cleaning up the old AMIs"
-            ansible-playbook ansible/cleanup_old_amis.yml
+            checkmode=''
           else
-            echo "Skipping cleanup as this is not a real build."
+            echo "Skipping cleanup as this is not a real build. Only validating."
           fi
+          ansible-playbook ansible/cleanup_old_amis.yml ${checkmode}
+
