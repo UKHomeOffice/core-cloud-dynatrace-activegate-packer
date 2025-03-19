@@ -52,7 +52,7 @@ build {
   ]
   provisioner "ansible" {
     playbook_file = "ansible/install_activegate.yml"
-    use_proxy =  false
+    #use_proxy =  false
     inventory_file_template =  "{{ .HostAlias }} ansible_host={{ .ID }} ansible_user={{ .User }} ansible_ssh_common_args='-o StrictHostKeyChecking=no -o ProxyCommand=\"sh -c \\\"aws ssm start-session --target %h --document-name AWS-StartSSHSession --parameters portNumber=%p\\\"\"'\n"
     extra_arguments = [
       "--extra-vars", "activegate_version=${var.activeGateVersion}",
