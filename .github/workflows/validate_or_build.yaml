@@ -52,12 +52,11 @@ jobs:
       - name: Perform a packer build
         run: |
           echo "------------------------"
-          ls -l /etc/ssh/ssh_config && cat /etc/ssh/ssh_config
           (
           echo 'Host *'
           echo 'KexAlgorithms curve25519-sha256,ecdh-sha2-nistp521'
-          ) >> /etc/ssh/ssh_config
-          cat /etc/ssh/ssh_config
+          ) >> sudo tee /etc/ssh/ssh_config.d/aws_ssm.conf
+          cat /etc/ssh/ssh_config.d/aws_ssm.conf
           echo "------------------------"
           packer_config="packer_config"
           packer init $packer_config
