@@ -42,7 +42,9 @@ The above example can be used to pass more variables, if needed, to override def
 | Variable name | Description |
 | ------------- | ----------- |
 | DT_ENV_ID     | Dynatrace environment ID. To come from the above AWS secret and read into the github pipeline using the github action as per https://collaboration.homeoffice.gov.uk/display/CORE/Consume+AWS+Secrets+within+GitHub+workflow+using+a+GitHub+action. |
-| DT_AUTH_TOKEN | Dynatrace auth token. To come from the AWS secret and read into the github pipeline using the github action as per https://collaboration.homeoffice.gov.uk/display/CORE/Consume+AWS+Secrets+within+GitHub+workflow+using+a+GitHub+action. |
+| DT_API_TOKEN  | Dynatrace API token. To come from the AWS secret and read into the github pipeline using the github action as per https://collaboration.homeoffice.gov.uk/display/CORE/Consume+AWS+Secrets+within+GitHub+workflow+using+a+GitHub+action. |
+
+For a github pipeline, these variables are made by retrieving the secrets from AWS.
 
 # Cleaning up the old AMIs
 
