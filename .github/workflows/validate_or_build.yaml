@@ -30,7 +30,7 @@ jobs:
       - name: Authenticate for the secrets 
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: arn:aws:iam::$AWS_ACCOUNT_ID:role/RoleToAccess_dynatrace_tokens_FromGithub
+          role-to-assume: arn:aws:iam::${{env.AWS_ACCOUNT_ID}}:role/RoleToAccess_dynatrace_tokens_FromGithub
           role-session-name: GithubDemoSession
           retry-max-attempts: 5
           aws-region: eu-west-2
@@ -44,7 +44,7 @@ jobs:
       - name: Authenticate for ami building
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: arn:aws:iam::$AWS_ACCOUNT_ID:role/Dynatrace-Activgate-AMI-Role
+          role-to-assume: arn:aws:iam::${{env.AWS_ACCOUNT_ID}}:role/Dynatrace-Activgate-AMI-Role
           role-session-name: GitHubActions
           retry-max-attempts: 5
           aws-region: eu-west-2
