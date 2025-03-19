@@ -51,6 +51,7 @@ jobs:
 
       - name: Perform a packer build
         run: |
+          packer init
           skip_ami='-var skipAmiCreate=true'
           if [[ "${{ github.event.pull_request.merged }}" == "true" ]]; then
             skip_ami=''
