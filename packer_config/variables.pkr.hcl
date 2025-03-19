@@ -1,4 +1,3 @@
-# TODO - Please refer to the end of this file for an information
 variable "baseAMIFilter" {
   description = "A variable in which the parameter to filter the #AMI to be passed on for filtering the base AMI. This fully or #partially optional and will use default values as found below."
   type = object({
