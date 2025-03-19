@@ -51,7 +51,8 @@ jobs:
 
       - name: Perform a packer build
         run: |
-          packer init
+          packer_config="packer_config"
+          packer init $packer_config
           skip_ami='-var skipAmiCreate=true'
           if [[ "${{ github.event.pull_request.merged }}" == "true" ]]; then
             skip_ami=''
@@ -59,7 +60,7 @@ jobs:
           else
             echo "This is a PR and therefore performing a dummy build to validate the code."
           fi
-          packer build ${skip_ami} packer_config
+          packer build ${skip_ami} $packer_config
 
       # TODO: Disabled temporarily until we decide on a policy for house keeping
       #- name: Clean up the old AMIs
