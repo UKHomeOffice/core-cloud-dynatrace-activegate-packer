@@ -11,6 +11,9 @@ on:
 
 env:
   AWS_REGION: 'eu-west-2'
+  # As per conversation in the standup on 19th Mar 2025
+  # decided to hardcode the test account for building the 
+  # AMI
   AWS_ACCOUNT_ID: 741448916464
 jobs:
   packer-validation-or-apply:
