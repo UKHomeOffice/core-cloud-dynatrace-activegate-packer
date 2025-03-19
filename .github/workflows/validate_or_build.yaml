@@ -11,6 +11,7 @@ on:
 
 env:
   AWS_REGION: 'eu-west-2'
+  AWS_ACCOUNT_ID: 741448916464
 jobs:
   packer-validation-or-apply:
     name: Validate packer
@@ -21,7 +22,7 @@ jobs:
       - name: Authenticate for the secrets 
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: arn:aws:iam::${{ vars.AWS_ACCOUNT_ID }}:role/RoleToAccess_dynatrace_tokens_FromGithub
+          role-to-assume: arn:aws:iam::${AWS_ACCOUNT_ID}:role/RoleToAccess_dynatrace_tokens_FromGithub
           role-session-name: GithubDemoSession
           retry-max-attempts: 5
           aws-region: eu-west-2
@@ -35,7 +36,7 @@ jobs:
       - name: Authenticate for ami building
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: arn:aws:iam::${{ vars.AWS_ACCOUNT_ID }}:role/Dynatrace-Activgate-AMI-Role
+          role-to-assume: arn:aws:iam::${AWS_ACCOUNT_ID}:role/Dynatrace-Activgate-AMI-Role
           role-session-name: GitHubActions
           retry-max-attempts: 5
           aws-region: eu-west-2
@@ -51,14 +52,15 @@ jobs:
           fi
           packer build ${skip_ami} packer_config
 
-      - name: Clean up the old AMIs
-        run: |
-          checkmode="--check"
-          if [[ "${{ github.event.pull_request.merged }}" == "true" ]]; then
-            echo "Cleaning up the old AMIs"
-            checkmode=''
-          else
-            echo "Skipping cleanup as this is not a real build. Only validating."
-          fi
-          ansible-playbook ansible/cleanup_old_amis.yml ${checkmode}
+      # TODO: Disabled temporarily until we decide on a policy for house keeping
+      #- name: Clean up the old AMIs
+      #  run: |
+      #    checkmode="--check"
+      #    if [[ "${{ github.event.pull_request.merged }}" == "true" ]]; then
+      #      echo "Cleaning up the old AMIs"
+      #      checkmode=''
+      #    else
+      #      echo "Skipping cleanup as this is not a real build. Only validating."
+      #    fi
+      #    ansible-playbook ansible/cleanup_old_amis.yml ${checkmode}
 

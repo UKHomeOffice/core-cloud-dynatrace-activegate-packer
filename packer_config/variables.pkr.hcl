@@ -46,11 +46,11 @@ variable "amiTags" {
   description = "Tags to be added to the AMI"
   type = map(string)
   default = {
-    account-code = "srini"
-    cost-centre  = "srini"
-    service-id   = "srini"
-    portfolio-id = "srini"
-    project-id   = "srini"
+    account-code = "521835"
+    cost-centre  = "1709144"
+    service-id   = "Dynatrace"
+    portfolio-id = "CTO"
+    project-id   = "CC"
   }
 }
 
