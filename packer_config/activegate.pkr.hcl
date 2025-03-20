@@ -26,14 +26,6 @@ source "amazon-ebs" "dt_activegate" {
   ssh_interface = "session_manager"
   iam_instance_profile = var.ssmRoleName
   ssh_username = var.baseAMISSHUserName
-  ssh_key_exchange_algorithms = [
-    "curve25519-sha256@libssh.org", 
-    "ecdh-sha2-nistp256", 
-    "ecdh-sha2-nistp384", 
-    "ecdh-sha2-nistp521", 
-    "diffie-hellman-group14-sha1", 
-    "diffie-hellman-group1-sha1"
-  ]
   tags = merge(var.amiTags, var.amiTypeTag, {Name: local.amiName})
 
   launch_block_device_mappings {
@@ -52,7 +44,7 @@ build {
   ]
   provisioner "ansible" {
     playbook_file = "ansible/install_activegate.yml"
-    #use_proxy =  false
+    use_proxy =  false
     inventory_file_template =  "{{ .HostAlias }} ansible_host={{ .ID }} ansible_user={{ .User }} ansible_ssh_common_args='-o StrictHostKeyChecking=no -o ProxyCommand=\"sh -c \\\"aws ssm start-session --target %h --document-name AWS-StartSSHSession --parameters portNumber=%p\\\"\"'\n"
     extra_arguments = [
       "--extra-vars", "activegate_version=${var.activeGateVersion}",

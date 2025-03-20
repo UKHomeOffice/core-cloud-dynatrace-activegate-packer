@@ -50,6 +50,8 @@ jobs:
           aws-region: eu-west-2
 
       - name: Perform a packer build
+        env:
+          AWS_REGION: eu-west-2
         run: |
           packer_config="packer_config"
           packer init $packer_config
