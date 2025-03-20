@@ -40,6 +40,7 @@ jobs:
         with:
           secret-ids: |
             ,dynatrace_tokens
+          parse-json-secrets: true
 
       - name: Authenticate for ami building
         uses: aws-actions/configure-aws-credentials@v4
