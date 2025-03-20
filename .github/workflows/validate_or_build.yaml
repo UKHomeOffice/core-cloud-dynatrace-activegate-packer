@@ -53,6 +53,7 @@ jobs:
         env:
           AWS_REGION: eu-west-2
         run: |
+          env | sort
           packer_config="packer_config"
           packer init $packer_config
           skip_ami='-var skipAmiCreate=true'
