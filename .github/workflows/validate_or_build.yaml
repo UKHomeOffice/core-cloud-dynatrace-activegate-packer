@@ -33,7 +33,7 @@ jobs:
           role-to-assume: arn:aws:iam::${{env.AWS_ACCOUNT_ID}}:role/RoleToAccess_dynatrace_tokens_FromGithub
           role-session-name: GithubActions
           retry-max-attempts: 5
-          aws-region: eu-west-2
+          aws-region: ${{env.AWS_REGION}}
 
       - name: Retrieve secrets
         uses: aws-actions/aws-secretsmanager-get-secrets@v2
@@ -48,12 +48,13 @@ jobs:
           role-to-assume: arn:aws:iam::${{env.AWS_ACCOUNT_ID}}:role/Dynatrace-Activgate-AMI-Role
           role-session-name: GitHubActions
           retry-max-attempts: 5
-          aws-region: eu-west-2
+          aws-region: ${{env.AWS_REGION}}
 
       - name: Perform a packer build
         env:
-          AWS_REGION: eu-west-2
+          AWS_REGION: ${{env.AWS_REGION}}
         run: |
+          env | sort
           packer_config="packer_config"
           packer init $packer_config
           skip_ami='-var skipAmiCreate=true'
