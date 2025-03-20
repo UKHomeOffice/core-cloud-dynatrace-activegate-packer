@@ -54,7 +54,6 @@ jobs:
         env:
           AWS_REGION: ${{env.AWS_REGION}}
         run: |
-          env | sort
           packer_config="packer_config"
           packer init $packer_config
           skip_ami='-var skipAmiCreate=true'
