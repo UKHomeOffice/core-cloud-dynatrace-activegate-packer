@@ -1,0 +1,35 @@
+# Ansible to be called after creating a new image 
+# to clean up older images
+- name: Housekeep the AMIs
+  hosts: localhost
+  gather_facts: no
+  become: no
+  connection: local
+
+  vars:
+    # TODO - agree the number with the team
+    # Only the newest 'ami_retention_count' number of AMIs will be kept and the rest removed
+    ami_retention_count: 10
+  tasks:
+    - name: Gather information about AMIs
+      amazon.aws.ec2_ami_info:
+        owners: self  
+        filters:
+          "tag:Type": "activegate-ami"
+      register: activegateamis
+
+    - name: Sort AMIs by creation date and get the oldest three
+      set_fact:
+        sorted_amis: |-
+          {{ 
+            activegateamis.images | 
+            sort(attribute='creation_date', reverse=true) | 
+            list 
+          }}
+
+    - name: Deregister AMI
+      amazon.aws.ec2_ami:
+        image_id: "{{item.image_id}}"
+        state: absent
+        delete_snapshot: true  
+      with_list: "{{sorted_amis[ami_retention_count:]}}"

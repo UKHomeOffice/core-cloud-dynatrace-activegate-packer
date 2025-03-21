@@ -1,0 +1,8 @@
+dt_auth_properties_path: '/var/lib/dynatrace/gateway/config/authorization.properties'
+dt_activegate_env_update_script: '/usr/local/sbin/activegate_dynatrace_update_script'
+activegate_secret_pull_service_name: 'pulldtsecrets.service'
+activegate_script_path: "/tmp/Dynatrace-ActiveGate.sh"
+dt_ca_pem_path: "/tmp/dt-root.cert.pem"
+dynatrace_environment_id: "{{lookup('ansible.builtin.env','DT_ENV_ID')}}"
+dynatrace_url_text: '.live.dynatrace.com/api/v1/deployment/installer/gateway/unix'
+aws_secret_name: 'dynatrace_tokens'

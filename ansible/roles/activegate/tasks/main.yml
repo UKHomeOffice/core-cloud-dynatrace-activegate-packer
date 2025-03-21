@@ -1,0 +1,54 @@
+- name: Workout the activegate version to be included in the url 
+  ansible.builtin.set_fact:
+    ag_version_workedout: |-
+      {{
+        ((activegate_version|default(''))|length <=0) |
+        ternary('latest', 'version/' ~ activegate_version|default(''))
+      }}
+
+- name: Workout the activegate architecture to be included in the url
+  ansible.builtin.set_fact:
+    ag_arch_workedout: |-
+      {{
+        (instance_architecture == 'amd64') |
+        ternary('x86',instance_architecture)
+      }}
+
+- name: Get the dynatrace shell script
+  ansible.builtin.get_url:
+    url: "https://{{dynatrace_environment_id}}{{dynatrace_url_text}}/{{ag_version_workedout|trim}}?arch={{ag_arch_workedout}}"
+    dest: "{{activegate_script_path}}"
+    headers:
+      Authorization: "Api-Token {{lookup('ansible.builtin.env','DT_API_TOKEN')}}"
+
+- name: Get the pem file to verify the installer
+  ansible.builtin.get_url:
+    url: https://ca.dynatrace.com/dt-root.cert.pem
+    dest: "{{dt_ca_pem_path}}"
+
+- name: Verify the installer
+  ansible.builtin.shell: >
+    ( echo 'Content-Type: multipart/signed; 
+      protocol="application/x-pkcs7-signature"; 
+      micalg="sha-256"; 
+      boundary="--SIGNED-INSTALLER"'; 
+      echo ; 
+      echo ; 
+      echo '----SIGNED-INSTALLER' ; 
+      cat {{activegate_script_path}} ) |
+    openssl cms -verify -CAfile {{dt_ca_pem_path}} > /dev/null
+
+- name: Install dynatrace 
+  ansible.builtin.command:
+    argv:
+      - /bin/bash
+      - "{{activegate_script_path}}"
+
+- name: Stop the Activegate service for the rest of the configuration and disable it
+  ansible.builtin.systemd_service:
+    name: "dynatracegateway.service"
+    state: stopped
+    enabled: false
+
+- name: Configure DT secret service
+  ansible.builtin.include_tasks: create_startup_service.yml

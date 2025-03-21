@@ -1,0 +1,79 @@
+name: Packer PR Validation or apply
+on:
+  pull_request:
+    branches:
+      - main
+  pull_request_target:
+    types:
+      - closed
+    branches:
+      - main
+
+permissions:
+  contents: read
+  id-token: write
+  actions: read
+
+env:
+  AWS_REGION: 'eu-west-2'
+  # As per conversation in the standup on 19th Mar 2025
+  # decided to hardcode the test account for building the 
+  # AMI
+  AWS_ACCOUNT_ID: 741448916464
+jobs:
+  packer-validation-or-apply:
+    name: Validate packer
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Authenticate for the secrets 
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::${{env.AWS_ACCOUNT_ID}}:role/RoleToAccess_dynatrace_tokens_FromGithub
+          role-session-name: GithubActions
+          retry-max-attempts: 5
+          aws-region: ${{env.AWS_REGION}}
+
+      - name: Retrieve secrets
+        uses: aws-actions/aws-secretsmanager-get-secrets@v2
+        with:
+          secret-ids: |
+            ,dynatrace_tokens
+          parse-json-secrets: true
+
+      - name: Authenticate for ami building
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::${{env.AWS_ACCOUNT_ID}}:role/Dynatrace-Activgate-AMI-Role
+          role-session-name: GitHubActions
+          retry-max-attempts: 5
+          aws-region: ${{env.AWS_REGION}}
+
+      - name: Perform a packer build
+        env:
+          AWS_REGION: ${{env.AWS_REGION}}
+        run: |
+          packer_config="packer_config"
+          packer init $packer_config
+          skip_ami='-var skipAmiCreate=true'
+          if [[ "${{ github.event.pull_request.merged }}" == "true" ]]; then
+            skip_ami=''
+            echo "Performing the real build."
+          else
+            echo "This is a PR and therefore performing a dummy build to validate the code."
+          fi
+          packer build ${skip_ami} $packer_config
+
+      # TODO: Disabled temporarily until we decide on a policy for house keeping
+      #- name: Clean up the old AMIs
+      #  run: |
+      #    checkmode="--check"
+      #    if [[ "${{ github.event.pull_request.merged }}" == "true" ]]; then
+      #      echo "Cleaning up the old AMIs"
+      #      checkmode=''
+      #    else
+      #      echo "Skipping cleanup as this is not a real build. Only validating."
+      #    fi
+      #    ansible-playbook ansible/cleanup_old_amis.yml ${checkmode}
+
