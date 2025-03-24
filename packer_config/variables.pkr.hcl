@@ -103,3 +103,8 @@ variable "skipAmiCreate" {
   type = bool
   default = false
 }
+
+variable "semVer" {
+  description = "The semver of the code to be included in the AMIs name. This is a mandatory variable."
+  type = string
+}

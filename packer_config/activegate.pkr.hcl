@@ -26,7 +26,7 @@ source "amazon-ebs" "dt_activegate" {
   ssh_interface = "session_manager"
   iam_instance_profile = var.ssmRoleName
   ssh_username = var.baseAMISSHUserName
-  tags = merge(var.amiTags, var.amiTypeTag, {Name: local.amiName})
+  tags = merge(var.amiTags, var.amiTypeTag, {Name: local.amiName, CodeVersion: var.semVer})
 
   launch_block_device_mappings {
     device_name = "/dev/sda1"

@@ -22,10 +22,30 @@ env:
   AWS_ACCOUNT_ID: 741448916464
 jobs:
   packer-validation-or-apply:
-    name: Validate packer
+    name: Validate/Build AMI
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
+
+      - name: Parse the SemVer label
+        id: label
+        uses: UKHomeOffice/match-label-action@v1
+        with:
+          labels: minor,major,patch
+          mode: singular
+
+      - name: Calculate SemVer value
+        id: calculate
+        uses: UKHomeOffice/semver-calculate-action@v2
+        with:
+          increment: ${{ steps.label.outputs.matchedLabels }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Tag Repository
+        uses: UKHomeOffice/semver-tag-action@v4
+        with:
+          tag: ${{ steps.calculate.outputs.version }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Authenticate for the secrets 
         uses: aws-actions/configure-aws-credentials@v4
@@ -63,7 +83,7 @@ jobs:
           else
             echo "This is a PR and therefore performing a dummy build to validate the code."
           fi
-          packer build ${skip_ami} $packer_config
+          packer build ${skip_ami} -var semVer=${{ steps.calculate.outputs.version }} $packer_config
 
       # TODO: Disabled temporarily until we decide on a policy for house keeping
       #- name: Clean up the old AMIs
