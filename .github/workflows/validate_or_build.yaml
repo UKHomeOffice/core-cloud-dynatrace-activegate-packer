@@ -22,7 +22,7 @@ env:
   AWS_ACCOUNT_ID: 741448916464
 jobs:
   packer-validation-or-apply:
-    name: Validate packer
+    name: Validate/Build AMI
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
