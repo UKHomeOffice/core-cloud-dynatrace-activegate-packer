@@ -35,6 +35,11 @@ source "amazon-ebs" "dt_activegate" {
   }
 
   skip_create_ami = var.skipAmiCreate
+
+  ami_users = var.sharedAccounts
+  ami_groups = var.sharedGroups
+  ami_org_arns = var.sharedOrganisations
+  ami_ou_arns = var.sharedOrganisationalUnits  
 }
 
 build {
