@@ -19,7 +19,10 @@ env:
   # As per conversation in the standup on 19th Mar 2025
   # decided to hardcode the test account for building the 
   # AMI
-  AWS_ACCOUNT_ID: 741448916464
+  # As per ticket CCL-2468, this hardcoded account is changed to be
+  # 'DynatraceProd'. This can be changed to be a matrix in the future.
+  AWS_ACCOUNT_ID: 559050217494
+  AWS_ENV: DynatraceProd
 jobs:
   packer-validation-or-apply:
     name: Validate/Build AMI
@@ -30,7 +33,7 @@ jobs:
       - name: Authenticate for the secrets 
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: arn:aws:iam::${{env.AWS_ACCOUNT_ID}}:role/RoleToAccess_dynatrace_tokens_FromGithub
+          role-to-assume: arn:aws:iam::${{env.AWS_ACCOUNT_ID}}:role/cc-observability-access-DynatraceApiToken-from-github-wf
           role-session-name: GithubActions
           retry-max-attempts: 5
           aws-region: ${{env.AWS_REGION}}
@@ -39,7 +42,7 @@ jobs:
         uses: aws-actions/aws-secretsmanager-get-secrets@v2
         with:
           secret-ids: |
-            ,dynatrace_tokens
+            ,DynatraceApiToken
           parse-json-secrets: true
 
       - name: Authenticate for ami building
@@ -57,13 +60,18 @@ jobs:
           packer_config="packer_config"
           packer init $packer_config
           skip_ami='-var skipAmiCreate=true'
+          vars_file=''
           if [[ "${{ github.event.pull_request.merged }}" == "true" ]]; then
             skip_ami=''
             echo "Performing the real build."
           else
             echo "This is a PR and therefore performing a dummy build to validate the code."
           fi
-          packer build ${skip_ami} $packer_config
+          # Include the environment specific vars if provided
+          if [[ -r "${{env.AWS_ENV}}.pkrvars.hcl" ]]; then
+            vars_file="-var-file=${{env.AWS_ENV}}.pkrvars.hcl"
+          fi
+          packer build ${skip_ami} ${vars_file} $packer_config
 
       # TODO: Disabled temporarily until we decide on a policy for house keeping
       #- name: Clean up the old AMIs

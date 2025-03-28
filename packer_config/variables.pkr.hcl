@@ -89,7 +89,7 @@ variable "kmsKeyId" {
 variable "ssmRoleName" {
   description = "Name of the SSM role using which connection to the instance, during the configuration/provisioning phase to be made."
   type = string
-  default="EC2_SSM_Role"
+  default = "cc-observability-dynatrace-activgate-ami-ssm-role"
 }
 
 variable "skipImageUpgrade" {
@@ -102,4 +102,28 @@ variable "skipAmiCreate" {
   description = "A flag to be enabled during the testing of the packer build."
   type = bool
   default = false
+}
+
+variable "sharedAccounts" {
+  description = "List of ids of the accounts that this AMI will be shared with."
+  type = list(string)
+  default = null # AMI will not be shared outside the account
+}
+
+variable "sharedGroups" {
+  description = "List of groups that this AMI will be shared with."
+  type = list(string)
+  default = null # AMI will not be shared with any other groups
+}
+
+variable "sharedOrganisations" {
+  description = "List of the arns of the Organisations that this AMI will be shared with."
+  type = list(string)
+  default = null # AMI will not be shared with any other organisation
+}
+
+variable "sharedOrganisationalUnits" {
+  description = "List of the arns of the Organisational Units that this AMI will be shared with."
+  type = list(string)
+  default = null # AMI will not be shared with any other organisational units
 }

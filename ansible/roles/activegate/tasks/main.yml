@@ -19,7 +19,7 @@
     url: "https://{{dynatrace_environment_id}}{{dynatrace_url_text}}/{{ag_version_workedout|trim}}?arch={{ag_arch_workedout}}"
     dest: "{{activegate_script_path}}"
     headers:
-      Authorization: "Api-Token {{lookup('ansible.builtin.env','DT_API_TOKEN')}}"
+      Authorization: "Api-Token {{lookup('ansible.builtin.env','DYNATRACE_API_TOKEN')}}"
 
 - name: Get the pem file to verify the installer
   ansible.builtin.get_url:
